@@ -1,0 +1,25 @@
+function [G, U] = tucker_als(X, R, max_iter)
+% X: Input tensor
+% R: Array of desired ranks for each mode
+% max_iter: Maximum number of iterations
+
+N = ndims(X); % Number of modes
+U = cell(1, N);
+
+% Initialize factor matrices (U) randomly
+for n = 1:N
+    U{n} = randn(size(X, n), R(n));
+end
+
+for iter = 1:max_iter
+    for n = 1:N
+        % Update factor matrix for mode n
+        Xn = double(tenmat(X, n)); % Unfold the tensor along mode n
+        U{n} = Xn * khatrirao(U{[1:n-1, n+1:N]}, 'r') / ...
+            (khatrirao(U{[1:n-1, n+1:N]}, 'r')' * khatrirao(U{[1:n-1, n+1:N]}, 'r'));
+    end
+
+    % Calculate core tensor (G)
+    G = ttm(X, U, 't'); % Tensor-times-matrix along all modes
+end
+end
